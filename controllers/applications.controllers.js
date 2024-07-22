@@ -3,6 +3,7 @@ const { ApplicationAnswer } = require("../models/ApplicationAnswer");
 
 async function createApplicationController(req, res) {
   try {
+    req.body.image = req.cloudinaryResult.secure_url;
     const application = await Application.create(req.body);
     return res.status(201).json(application);
   } catch (err) {

@@ -7,9 +7,11 @@ const {
   getApplicationWithAnswersController,
   getApplicationByIdWithAnswersController,
 } = require("../controllers/applications.controllers");
-const upload = require("../uploads/uploadImage");
+const multer = require("multer");
+const upload = multer();
 const { AdminPrivileges } = require("../middlewares/jwtServices");
 const canActivate = require("../middlewares/canActivate");
+const uploadToCloudinary = require("../middlewares/uploadToCloudinary");
 var router = express.Router();
 
 router.post(
@@ -17,6 +19,7 @@ router.post(
   AdminPrivileges,
   canActivate("applications", "create"),
   upload.single("image"),
+  uploadToCloudinary,
   createApplicationController
 );
 
