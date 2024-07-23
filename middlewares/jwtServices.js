@@ -6,8 +6,7 @@ async function UserPrivileges(req, res, next) {
     if (!req.header("Authorization")) {
       return res.status(401).json("FORBIDDEN");
     }
-    const key = req.header("Authorization").split(" ")[0];
-    const token = req.header("Authorization").split(" ")[1];
+    const [key, token] = req.header("Authorization").split(" ");
     if (key !== process.env.JWT_KEYWORD_WARDENER) {
       return res.status(401).json("FORBIDDEN");
     }
@@ -19,6 +18,9 @@ async function UserPrivileges(req, res, next) {
     req.user = decoded;
     next();
   } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json("Token expired");
+    }
     return res.status(401).json("FORBIDDEN");
   }
 }
@@ -28,8 +30,7 @@ async function AdminPrivileges(req, res, next) {
     if (!req.header("Authorization")) {
       return res.status(401).json("FORBIDDEN");
     }
-    const key = req.header("Authorization").split(" ")[0];
-    const token = req.header("Authorization").split(" ")[1];
+    const [key, token] = req.header("Authorization").split(" ");
     if (key !== process.env.JWT_KEYWORD_ADMIN) {
       return res.status(401).json("FORBIDDEN");
     }
@@ -38,14 +39,19 @@ async function AdminPrivileges(req, res, next) {
     if (!user) {
       return res.status(401).json("FORBIDDEN");
     }
-    if (user.category == "PARTICIPANT") {
+    if (user.category === "PARTICIPANT") {
       return res.status(401).json("FORBIDDEN");
     }
     req.user = decoded;
     next();
   } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json("Token expired");
+    }
     return res.status(401).json("FORBIDDEN");
   }
 }
+
+module.exports = { AdminPrivileges };
 
 module.exports = { AdminPrivileges, UserPrivileges };

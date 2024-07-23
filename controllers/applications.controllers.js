@@ -1,5 +1,6 @@
 const { Application } = require("../models/Application");
 const { ApplicationAnswer } = require("../models/ApplicationAnswer");
+const { User } = require("../models/User");
 
 async function createApplicationController(req, res) {
   try {
@@ -86,6 +87,33 @@ async function getApplicationByIdWithAnswersController(req, res) {
     return res.status(500).json("INTERNAL SERVER ERROR");
   }
 }
+
+async function approveApplicationSubmitController(req, res) {
+  try {
+    const application = await Application.findById(req.body.application);
+    if (!application) {
+      return res.status(404).json("Application Not Found..");
+    }
+    const answer = await ApplicationAnswer.findById(req.params.id);
+    if (!answer) {
+      return res.status(404).json("Application Answer Not Found..");
+    }
+    let data = answer.form.reduce((acc, curr) => {
+      acc[curr.question.toLowerCase().replace(/ /g, "_")] = curr.answer;
+      return acc;
+    }, {});
+    const randomPassword = Math.random().toString(36).slice(-8);
+    data.category = application.category;
+    data.password = bcrypt.hashSync(randomPassword, 10);
+    const user = await User.create(data);
+    await user.save();
+    // send mail with token to change password and update data
+    res.send(data);
+  } catch (err) {
+    return res.status(500).json("INTERNAL SERVER ERROR");
+  }
+}
+
 module.exports = {
   createApplicationController,
   getApplicationsController,
@@ -93,4 +121,5 @@ module.exports = {
   submitAnswerApplicationController,
   getApplicationWithAnswersController,
   getApplicationByIdWithAnswersController,
+  approveApplicationSubmitController,
 };

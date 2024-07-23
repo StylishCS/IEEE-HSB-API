@@ -5,24 +5,14 @@ const userSchema = new mongoose.Schema(
     email: String,
     password: {
       type: String,
-      default: "",
+      required: true,
     },
     phone: String,
     faculty: String,
     level: Number,
-    linkedIn: {
-      type: String,
-      required: false,
-    },
-    image: {
-      type: String,
-      required: false,
-    },
+    linkedIn: String,
+    image: String,
     category: String,
-    role: {
-      type: String,
-      required: false,
-    },
     chapter: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: "Chapter",

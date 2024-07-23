@@ -6,6 +6,7 @@ const {
   submitAnswerApplicationController,
   getApplicationWithAnswersController,
   getApplicationByIdWithAnswersController,
+  approveApplicationSubmitController,
 } = require("../controllers/applications.controllers");
 const multer = require("multer");
 const upload = multer();
@@ -14,6 +15,7 @@ const canActivate = require("../middlewares/canActivate");
 const uploadToCloudinary = require("../middlewares/uploadToCloudinary");
 var router = express.Router();
 
+/* Admin Actions */
 router.post(
   "/",
   AdminPrivileges,
@@ -34,7 +36,14 @@ router.get(
   canActivate("applications", "view"),
   getApplicationByIdWithAnswersController
 );
+router.patch(
+  "/admin/approve/:id",
+  AdminPrivileges,
+  canActivate("applications", "edit"),
+  approveApplicationSubmitController
+);
 
+/* User Actions */
 router.post("/submit/:id", submitAnswerApplicationController);
 router.get("/", getApplicationsController);
 router.get("/:id", getApplicationByIdController);
