@@ -5,7 +5,7 @@ const nodemailer = require("nodemailer");
 const ejs = require("ejs");
 const path = require("path");
 const fs = require("fs");
-
+const crypto = require("crypto");
 async function adminLoginController(req, res) {
   try {
     const user = await User.findOne({ email: req.body.email });
@@ -111,7 +111,10 @@ async function verifyAdminLoginController(req, res) {
         expiresIn: "5m",
       }
     );
-    user.refreshToken = bcrypt.hashSync(refreshToken, 10);
+    user.refreshToken = crypto
+      .createHash("SHA256")
+      .update(refreshToken)
+      .digest("hex");
     user.otp.code = null;
     user.otp.expire = null;
     await user.save();
@@ -119,7 +122,6 @@ async function verifyAdminLoginController(req, res) {
       .status(200)
       .json({ user: userWithoutPassword, refreshToken, accessToken });
   } catch (err) {
-    console.log(err);
     return res.status(500).json("INTERNAL SERVER ERROR");
   }
 }
@@ -138,16 +140,16 @@ async function adminRefreshTokenController(req, res) {
     }
     const user = await User.findById(decoded._id);
     if (!user) {
-      console.log("flag2");
       return res.status(401).json("Unauthorized");
     }
     if (user.category == "PARTICIPANT") {
-      console.log("flag3");
       return res.status(401).json("Unauthorized");
     }
-    const valid = bcrypt.compareSync(refreshToken, user.refreshToken);
-    if (!valid) {
-      console.log("flag4");
+    const newHashValue = crypto
+      .createHash("SHA256")
+      .update(refreshToken)
+      .digest("hex");
+    if (newHashValue != user.refreshToken) {
       return res.status(401).json("Unauthorized");
     }
     let userWithoutPassword = { ...user };
