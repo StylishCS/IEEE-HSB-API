@@ -22,11 +22,6 @@ router.post(
   uploadToCloudinary,
   createApplicationController
 );
-
-router.get("/", getApplicationsController);
-router.get("/:id", getApplicationByIdController);
-router.post("/submit/:id", submitAnswerApplicationController);
-
 router.get(
   "/admin",
   AdminPrivileges,
@@ -39,5 +34,9 @@ router.get(
   canActivate("applications", "view"),
   getApplicationByIdWithAnswersController
 );
+
+router.post("/submit/:id", submitAnswerApplicationController);
+router.get("/", getApplicationsController);
+router.get("/:id", getApplicationByIdController);
 
 module.exports = router;

@@ -38,6 +38,9 @@ async function AdminPrivileges(req, res, next) {
     if (!user) {
       return res.status(401).json("FORBIDDEN");
     }
+    if (user.category == "PARTICIPANT") {
+      return res.status(401).json("FORBIDDEN");
+    }
     req.user = decoded;
     next();
   } catch (error) {

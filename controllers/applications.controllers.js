@@ -41,6 +41,14 @@ async function submitAnswerApplicationController(req, res) {
     if (!application) {
       return res.status(404).json("Application Not Found..");
     }
+    const currentDate = new Date();
+    const startDate = new Date(application.date[0]);
+    const endDate = new Date(application.date[1]);
+
+    if (currentDate < startDate || currentDate > endDate) {
+      return res.status(400).json("Application is closed for submissions.");
+    }
+
     const applicationAnswer = new ApplicationAnswer({
       application: application._id,
       form: req.body.applicationAnswer,
@@ -60,6 +68,7 @@ async function getApplicationWithAnswersController(req, res) {
     const application = await Application.find().populate("answers");
     return res.status(200).json(application);
   } catch (err) {
+    console.log(err);
     return res.status(500).json("INTERNAL SERVER ERROR");
   }
 }
@@ -73,6 +82,7 @@ async function getApplicationByIdWithAnswersController(req, res) {
     }
     return res.status(200).json(application);
   } catch (err) {
+    console.log(err);
     return res.status(500).json("INTERNAL SERVER ERROR");
   }
 }
