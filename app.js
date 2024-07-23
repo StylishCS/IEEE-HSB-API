@@ -23,7 +23,7 @@ mongoose
 var app = express();
 app.use(
   cors({
-    origin: ["ieeehsb.software"],
+    origin: ["https://ieeehsb.software", "http://localhost:3000"],
   })
 );
 // view engine setup
