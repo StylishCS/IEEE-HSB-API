@@ -108,18 +108,17 @@ async function verifyAdminLoginController(req, res) {
     user.otp.expire = null;
     await user.save();
     res.cookie("refreshToken", refreshToken, {
-      // can only be accessed by server requests
       httpOnly: true,
       path: "/",
       secure: false,
-      sameSite: "None",
+      sameSite: "lax",
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 Day
     });
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       path: "/",
       secure: false,
-      sameSite: "None",
+      sameSite: "lax",
       maxAge: 300000, // 5 Minutes
     });
     return res.status(200).json(user);
