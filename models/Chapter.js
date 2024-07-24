@@ -1,6 +1,11 @@
 const mongoose = require("mongoose");
 const chapterSchema = new mongoose.Schema(
   {
+    chair: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: false,
+    },
     name: String,
     committees: {
       type: [mongoose.Schema.Types.ObjectId],

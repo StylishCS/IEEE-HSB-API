@@ -1,12 +1,9 @@
 var express = require("express");
 const {
-  adminLoginController,
-  verifyAdminLoginController,
-  adminRefreshTokenController,
+  activateUserAccountController,
 } = require("../controllers/authentication.controllers");
 var router = express.Router();
 
-router.post("/login", adminLoginController);
-router.post("/verify", verifyAdminLoginController);
-router.get("/refreshToken", adminRefreshTokenController);
+router.post("/activate", activateUserAccountController);
+
 module.exports = router;

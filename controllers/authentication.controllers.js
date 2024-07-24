@@ -65,7 +65,7 @@ async function adminLoginController(req, res) {
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
         console.log(error);
-        return res.status(500).json("Error sending email");
+        throw error;
       }
       console.log("Email sent: " + info.response);
     });
@@ -171,8 +171,66 @@ async function adminRefreshTokenController(req, res) {
   }
 }
 
+async function activateUserAccountController(req, res) {
+  try {
+    const token = req.header("Authorization");
+    const { password } = req.body;
+    if (!token) {
+      return res.status(401).json("Missing Verification Token");
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_VERIFY);
+    if (!decoded) {
+      return res.status(401).json("Verification Token Malformed");
+    }
+    const user = await User.findById(decoded._id);
+    if (!user) {
+      return res.status(401).json("Verification Token Malformed");
+    }
+    if (user.verified) {
+      return res.status(401).json("Verification Token Malformed");
+    }
+    if (user.password != decoded.password) {
+      return res.status(401).json("Verification Token Malformed");
+    }
+    user.password = bcrypt.hashSync(password, 10);
+    user.verified = true;
+    await user.save();
+    let userWithoutPassword = { ...user };
+    delete userWithoutPassword.password;
+    delete userWithoutPassword.refreshToken;
+    delete userWithoutPassword.otp;
+    userWithoutPassword = userWithoutPassword._doc;
+    const refreshToken = jwt.sign(
+      { ...userWithoutPassword },
+      process.env.JWT_SECRET_WARDENER,
+      {
+        expiresIn: "30d",
+      }
+    );
+    const accessToken = jwt.sign(
+      { ...userWithoutPassword },
+      process.env.JWT_SECRET_WARDENER,
+      {
+        expiresIn: "5m",
+      }
+    );
+    user.refreshToken = crypto
+      .createHash("SHA256")
+      .update(refreshToken)
+      .digest("hex");
+    await user.save();
+    return res
+      .status(200)
+      .json({ user: userWithoutPassword, refreshToken, accessToken });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json("INTERNAL SERVER ERROR");
+  }
+}
+
 module.exports = {
   adminLoginController,
   verifyAdminLoginController,
   adminRefreshTokenController,
+  activateUserAccountController,
 };

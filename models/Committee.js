@@ -8,13 +8,10 @@ const committeeSchema = new mongoose.Schema(
       required: false,
     },
     isTech: Boolean,
-    chair: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
     director: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      required: false,
     },
     viceDirector: {
       type: mongoose.Schema.Types.ObjectId,

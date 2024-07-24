@@ -14,14 +14,12 @@ const userSchema = new mongoose.Schema(
     image: String,
     category: String,
     chapter: {
-      type: [mongoose.Schema.Types.ObjectId],
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Chapter",
-      default: [],
     },
     committee: {
-      type: [mongoose.Schema.Types.ObjectId],
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Committee",
-      default: [],
     },
     track: {
       type: String,

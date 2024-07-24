@@ -3,6 +3,7 @@ const { Committee } = require("../models/Committee");
 
 async function createChapterController(req, res) {
   try {
+    console.log(req.body);
     const chapter = await Chapter.create(req.body);
     return res.status(201).json(chapter);
   } catch (err) {

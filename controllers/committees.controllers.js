@@ -8,3 +8,5 @@ async function createCommitteeController(req, res) {
     return res.status(500).json("INTERNAL SERVER ERROR");
   }
 }
+
+module.exports = { createCommitteeController };

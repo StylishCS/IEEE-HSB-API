@@ -8,7 +8,10 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
+var adminsRouter = require("./routes/admins");
 var applicationsRouter = require("./routes/applications");
+var committeesRouter = require("./routes/committees");
+var chaptersRouter = require("./routes/chapters");
 
 mongoose
   .connect(process.env.DB_CONNECTION_STRING)
@@ -39,7 +42,10 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
+app.use("/admins", adminsRouter);
 app.use("/applications", applicationsRouter);
+app.use("/committees", committeesRouter);
+app.use("/chapters", chaptersRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

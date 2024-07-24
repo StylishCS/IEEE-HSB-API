@@ -1,7 +1,16 @@
 const { Application } = require("../models/Application");
 const { ApplicationAnswer } = require("../models/ApplicationAnswer");
 const { User } = require("../models/User");
-
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
+const ejs = require("ejs");
+const path = require("path");
+const fs = require("fs");
+const crypto = require("crypto");
+const { Chapter } = require("../models/Chapter");
+const { Committee } = require("../models/Committee");
+const { Role } = require("../models/Role");
 async function createApplicationController(req, res) {
   try {
     req.body.image = req.cloudinaryResult.secure_url;
@@ -105,11 +114,62 @@ async function approveApplicationSubmitController(req, res) {
     const randomPassword = Math.random().toString(36).slice(-8);
     data.category = application.category;
     data.password = bcrypt.hashSync(randomPassword, 10);
+    const chapter = await Chapter.findOne({ name: data.chapter });
+    const committee = await Committee.findOne({ name: data.committee });
+    const role = await Role.findOne({ role: data.category });
+    data.chapter = chapter._id;
+    data.committee = committee._id;
+    data.roleId = role._id;
     const user = await User.create(data);
     await user.save();
     // send mail with token to change password and update data
-    res.send(data);
+    const token = jwt.sign(
+      { _id: user._id, password: user.password },
+      process.env.JWT_SECRET_VERIFY,
+      { expiresIn: "18h" }
+    );
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      service: "Gmail",
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.NODEMAILER_USER,
+        pass: process.env.NODEMAILER_PASSWORD,
+      },
+    });
+    const mail_data = {
+      name: user.name,
+      email: user.email,
+      otp: token,
+    };
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "public",
+      "mail-template",
+      "otp-mail.ejs"
+    );
+    const fileContent = fs.readFileSync(filePath, "utf8");
+    const modifiedEmailTemplate = ejs.render(fileContent, mail_data);
+
+    const mailOptions = {
+      from: "ieee.hsb.official@gmail.com",
+      to: user.email,
+      subject: "Account Confirmation",
+      html: modifiedEmailTemplate,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log(error);
+        throw error;
+      }
+      console.log("Email sent: " + info.response);
+    });
+    return res.status(201).json("User Approved..");
   } catch (err) {
+    console.log(err);
     return res.status(500).json("INTERNAL SERVER ERROR");
   }
 }

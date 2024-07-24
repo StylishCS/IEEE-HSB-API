@@ -11,6 +11,8 @@ const roleSchema = new mongoose.Schema({
   role: String,
   permissions: {
     applications: permissionsSchema,
+    committees: permissionsSchema,
+    chapters: permissionsSchema,
   },
 });
 
