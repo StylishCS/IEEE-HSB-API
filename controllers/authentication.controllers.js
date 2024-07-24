@@ -115,7 +115,7 @@ async function verifyAdminLoginController(req, res) {
       // secure = only send cookie over https
       secure: true,
       // sameSite = only send cookie if the request is coming from the same origin
-      sameSite: "none", // "strict" | "lax" | "none" (secure must be true)
+      sameSite: "lax", // "strict" | "lax" | "none" (secure must be true)
       // maxAge = how long the cookie is valid for in milliseconds
       maxAge: 30 * 24 * 60 * 60 * 1000, // 1 hour
     });
@@ -127,7 +127,7 @@ async function verifyAdminLoginController(req, res) {
       // secure = only send cookie over https
       secure: true,
       // sameSite = only send cookie if the request is coming from the same origin
-      sameSite: "none", // "strict" | "lax" | "none" (secure must be true)
+      sameSite: "lax", // "strict" | "lax" | "none" (secure must be true)
       // maxAge = how long the cookie is valid for in milliseconds
       maxAge: 300000, // 1 hour
     });
