@@ -40,7 +40,13 @@ router.get("/cookie", (req, res) => {
     maxAge: 3600000, // 1 hour
   });
   //res.setHeader("Set-Cookie", "myCookie=exampleValue; HttpOnly");
-  res.send("ok");
+  res.json("ok");
+});
+
+router.get("/check-cookie", (req, res) => {
+  // Read the cookies from the request
+  const cookies = req.cookies;
+  res.json(cookies);
 });
 
 module.exports = router;

@@ -107,7 +107,31 @@ async function verifyAdminLoginController(req, res) {
     user.otp.code = null;
     user.otp.expire = null;
     await user.save();
-    return res.status(200).json({ user, refreshToken, accessToken });
+    res.cookie("refreshToken", refreshToken, {
+      // can only be accessed by server requests
+      httpOnly: true,
+      // path = where the cookie is valid
+      path: "/",
+      // secure = only send cookie over https
+      secure: true,
+      // sameSite = only send cookie if the request is coming from the same origin
+      sameSite: "none", // "strict" | "lax" | "none" (secure must be true)
+      // maxAge = how long the cookie is valid for in milliseconds
+      maxAge: 3600000, // 1 hour
+    });
+    res.cookie("accessToken", accessToken, {
+      // can only be accessed by server requests
+      httpOnly: true,
+      // path = where the cookie is valid
+      path: "/",
+      // secure = only send cookie over https
+      secure: true,
+      // sameSite = only send cookie if the request is coming from the same origin
+      sameSite: "none", // "strict" | "lax" | "none" (secure must be true)
+      // maxAge = how long the cookie is valid for in milliseconds
+      maxAge: 3600000, // 1 hour
+    });
+    return res.status(200).json(user);
   } catch (err) {
     console.log(err);
     return res.status(500).json("INTERNAL SERVER ERROR");
