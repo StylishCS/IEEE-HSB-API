@@ -37,7 +37,7 @@ router.get("/cookie", (req, res) => {
     // sameSite = only send cookie if the request is coming from the same origin
     sameSite: "lax", // "strict" | "lax" | "none" (secure must be true)
     // maxAge = how long the cookie is valid for in milliseconds
-    maxAge: 3600000, // 1 hour
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 1 hour
   });
   //res.setHeader("Set-Cookie", "myCookie=exampleValue; HttpOnly");
   res.json("ok");

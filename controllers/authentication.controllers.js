@@ -117,9 +117,9 @@ async function verifyAdminLoginController(req, res) {
       // sameSite = only send cookie if the request is coming from the same origin
       sameSite: "none", // "strict" | "lax" | "none" (secure must be true)
       // maxAge = how long the cookie is valid for in milliseconds
-      maxAge: 3600000, // 1 hour
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 1 hour
     });
-    res.cookie("accessToken", accessToken, {
+    res.cookie("refreshToken", refreshToken, {
       // can only be accessed by server requests
       httpOnly: true,
       // path = where the cookie is valid
@@ -129,7 +129,7 @@ async function verifyAdminLoginController(req, res) {
       // sameSite = only send cookie if the request is coming from the same origin
       sameSite: "none", // "strict" | "lax" | "none" (secure must be true)
       // maxAge = how long the cookie is valid for in milliseconds
-      maxAge: 3600000, // 1 hour
+      maxAge: 300000, // 1 hour
     });
     return res.status(200).json(user);
   } catch (err) {
