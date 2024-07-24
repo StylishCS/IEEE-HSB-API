@@ -122,6 +122,7 @@ async function verifyAdminLoginController(req, res) {
       .status(200)
       .json({ user: userWithoutPassword, refreshToken, accessToken });
   } catch (err) {
+    console.log(err);
     return res.status(500).json("INTERNAL SERVER ERROR");
   }
 }
