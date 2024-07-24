@@ -92,11 +92,10 @@ async function verifyAdminLoginController(req, res) {
     if (!validOtp) {
       return res.status(401).json("Wrong Email or OTP");
     }
-    let userWithoutPassword = { ...user };
-    delete userWithoutPassword._doc.password;
-    delete userWithoutPassword._doc.refreshToken;
-    delete userWithoutPassword._doc.otp;
-    userWithoutPassword = userWithoutPassword._doc;
+    let userWithoutPassword = { ...user }._doc;
+    delete userWithoutPassword.password;
+    delete userWithoutPassword.refreshToken;
+    delete userWithoutPassword.otp;
     const refreshToken = jwt.sign(
       { ...userWithoutPassword },
       process.env.JWT_SECRET_ADMIN,
