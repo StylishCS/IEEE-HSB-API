@@ -6,6 +6,7 @@ var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const session = require("express-session");
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
 var adminsRouter = require("./routes/admins");
@@ -24,6 +25,19 @@ mongoose
   });
 
 var app = express();
+const sessionConfig = {
+  secret: "MYSECRET",
+  name: "IEEE-HSB",
+  resave: false,
+  saveUninitialized: false,
+  store: store,
+  cookie: {
+    sameSite: "none",
+    secure: true,
+  },
+};
+app.set("trust proxy", 1);
+app.use(session(sessionConfig));
 app.use(
   cors({
     origin: [
@@ -34,6 +48,7 @@ app.use(
     credentials: true,
   })
 );
+
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "jade");
