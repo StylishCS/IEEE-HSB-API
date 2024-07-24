@@ -110,26 +110,18 @@ async function verifyAdminLoginController(req, res) {
     res.cookie("refreshToken", refreshToken, {
       // can only be accessed by server requests
       httpOnly: true,
-      // path = where the cookie is valid
+      httpOnly: true,
       path: "/",
-      // secure = only send cookie over https
       secure: true,
-      // sameSite = only send cookie if the request is coming from the same origin
-      sameSite: "lax", // "strict" | "lax" | "none" (secure must be true)
-      // maxAge = how long the cookie is valid for in milliseconds
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 1 hour
+      sameSite: "none",
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 Day
     });
     res.cookie("refreshToken", refreshToken, {
-      // can only be accessed by server requests
       httpOnly: true,
-      // path = where the cookie is valid
       path: "/",
-      // secure = only send cookie over https
       secure: true,
-      // sameSite = only send cookie if the request is coming from the same origin
-      sameSite: "lax", // "strict" | "lax" | "none" (secure must be true)
-      // maxAge = how long the cookie is valid for in milliseconds
-      maxAge: 300000, // 1 hour
+      sameSite: "none",
+      maxAge: 300000, // 5 Minutes
     });
     return res.status(200).json(user);
   } catch (err) {
