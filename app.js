@@ -30,7 +30,6 @@ const sessionConfig = {
   name: "IEEE-HSB",
   resave: false,
   saveUninitialized: false,
-  store: store,
   cookie: {
     sameSite: "none",
     secure: true,
