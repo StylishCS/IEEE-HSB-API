@@ -112,14 +112,14 @@ async function verifyAdminLoginController(req, res) {
       httpOnly: true,
       path: "/",
       secure: false,
-      sameSite: "lax",
+      sameSite: "None",
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 Day
     });
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       path: "/",
       secure: false,
-      sameSite: "lax",
+      sameSite: "None",
       maxAge: 300000, // 5 Minutes
     });
     return res.status(200).json(user);
