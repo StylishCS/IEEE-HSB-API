@@ -79,7 +79,9 @@ async function adminLoginController(req, res) {
 
 async function verifyAdminLoginController(req, res) {
   try {
-    const user = await User.findOne({ email: req.body.email });
+    const user = await User.findOne({ email: req.body.email }).select(
+      "-password -refreshToken"
+    );
     if (!user) {
       return res.status(401).json("Wrong Email or OTP");
     }
@@ -92,24 +94,12 @@ async function verifyAdminLoginController(req, res) {
     if (!validOtp) {
       return res.status(401).json("Wrong Email or OTP");
     }
-    let userWithoutPassword = { ...user }._doc;
-    delete userWithoutPassword.password;
-    delete userWithoutPassword.refreshToken;
-    delete userWithoutPassword.otp;
-    const refreshToken = jwt.sign(
-      { ...userWithoutPassword },
-      process.env.JWT_SECRET_ADMIN,
-      {
-        expiresIn: "30d",
-      }
-    );
-    const accessToken = jwt.sign(
-      { ...userWithoutPassword },
-      process.env.JWT_SECRET_ADMIN,
-      {
-        expiresIn: "5m",
-      }
-    );
+    const refreshToken = jwt.sign({ ...user }, process.env.JWT_SECRET_ADMIN, {
+      expiresIn: "30d",
+    });
+    const accessToken = jwt.sign({ ...user }, process.env.JWT_SECRET_ADMIN, {
+      expiresIn: "5m",
+    });
     user.refreshToken = crypto
       .createHash("SHA256")
       .update(refreshToken)
@@ -117,9 +107,7 @@ async function verifyAdminLoginController(req, res) {
     user.otp.code = null;
     user.otp.expire = null;
     await user.save();
-    return res
-      .status(200)
-      .json({ user: userWithoutPassword, refreshToken, accessToken });
+    return res.status(200).json({ user, refreshToken, accessToken });
   } catch (err) {
     console.log(err);
     return res.status(500).json("INTERNAL SERVER ERROR");
