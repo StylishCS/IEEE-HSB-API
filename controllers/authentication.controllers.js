@@ -110,10 +110,8 @@ async function verifyAdminLoginController(req, res) {
     res.cookie("refreshToken", refreshToken, {
       // can only be accessed by server requests
       httpOnly: true,
-      httpOnly: true,
       path: "/",
       secure: true,
-      sameSite: "none",
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 Day
     });
     res.cookie("refreshToken", refreshToken, {
