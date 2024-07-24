@@ -118,7 +118,6 @@ async function verifyAdminLoginController(req, res) {
       httpOnly: true,
       path: "/",
       secure: true,
-      sameSite: "none",
       maxAge: 300000, // 5 Minutes
     });
     return res.status(200).json(user);
