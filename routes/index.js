@@ -24,6 +24,15 @@ router.get(
   }
 );
 
+router.get("/set-cookie", (req, res) => {
+  res.cookie("myCookie", "cookie123", {
+    httpOnly: true,
+    path: "/",
+    secure: true,
+  });
+  res.end();
+});
+
 router.get("/cookie", (req, res) => {
   res.cookie("token", "testToken123", {
     // can only be accessed by server requests
