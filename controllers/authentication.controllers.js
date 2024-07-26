@@ -107,20 +107,28 @@ async function verifyAdminLoginController(req, res) {
     user.otp.code = null;
     user.otp.expire = null;
     await user.save();
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      // path: "/",
-      secure: true,
-      // sameSite: "lax",
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 Day
-    });
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      // path: "/",
-      secure: true,
-      // sameSite: "lax",
-      maxAge: 300000, // 5 Minutes
-    });
+    // res.cookie("refreshToken", refreshToken, {
+    //   httpOnly: true,
+    //   // path: "/",
+    //   secure: true,
+    //   // sameSite: "lax",
+    //   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 Day
+    // });
+    // res.cookie("accessToken", accessToken, {
+    //   httpOnly: true,
+    //   // path: "/",
+    //   secure: true,
+    //   // sameSite: "lax",
+    //   maxAge: 300000, // 5 Minutes
+    // });
+    res.setHeader("Set-Cookie", [
+      `accessToken=${accessToken}; HttpOnly; SameSite=None; Path=/; Max-Age=${
+        60 * 60
+      }; Secure=True;`,
+      `refreshToken=${refreshToken}; HttpOnly; SameSite=None; Path=/; Max-Age=${
+        60 * 60 * 24 * 7 * 2
+      }; Secure=True;`,
+    ]);
     return res.status(200).json(user);
   } catch (err) {
     console.log(err);
