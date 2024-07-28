@@ -1,21 +1,22 @@
 const jwt = require("jsonwebtoken");
 const { User } = require("../models/User");
+const { decryptPayload } = require("../utils/cryptoService");
 
 async function UserPrivileges(req, res, next) {
   try {
-    if (!req.header("Authorization")) {
+    if (!req.cookies.accessToken) {
       return res.status(401).json("FORBIDDEN");
     }
-    const [key, token] = req.header("Authorization").split(" ");
-    if (key !== process.env.JWT_KEYWORD_WARDENER) {
-      return res.status(401).json("FORBIDDEN");
-    }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_WARDENER);
-    const user = await User.findById(decoded._id);
+    const decoded = jwt.verify(
+      req.cookies.accessToken,
+      process.env.JWT_SECRET_WARDENER
+    );
+    const decryptedData = decryptPayload(decoded.encryptedAccessTokenPayload);
+    const user = await User.findById(decryptedData._id);
     if (!user) {
       return res.status(401).json("FORBIDDEN");
     }
-    req.user = decoded;
+    req.user = decryptedData;
     next();
   } catch (error) {
     if (error.name === "TokenExpiredError") {
@@ -27,22 +28,22 @@ async function UserPrivileges(req, res, next) {
 
 async function AdminPrivileges(req, res, next) {
   try {
-    if (!req.header("Authorization")) {
+    if (!req.cookies.accessToken) {
       return res.status(401).json("FORBIDDEN");
     }
-    const [key, token] = req.header("Authorization").split(" ");
-    if (key !== process.env.JWT_KEYWORD_ADMIN) {
-      return res.status(401).json("FORBIDDEN");
-    }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_ADMIN);
-    const user = await User.findById(decoded._id);
+    const decoded = jwt.verify(
+      req.cookies.accessToken,
+      process.env.JWT_SECRET_ADMIN
+    );
+    const decryptedData = decryptPayload(decoded.encryptedAccessTokenPayload);
+    const user = await User.findById(decryptedData._id);
     if (!user) {
       return res.status(401).json("FORBIDDEN");
     }
     if (user.category === "PARTICIPANT") {
       return res.status(401).json("FORBIDDEN");
     }
-    req.user = decoded;
+    req.user = decryptedData;
     next();
   } catch (error) {
     if (error.name === "TokenExpiredError") {
@@ -51,7 +52,5 @@ async function AdminPrivileges(req, res, next) {
     return res.status(401).json("FORBIDDEN");
   }
 }
-
-module.exports = { AdminPrivileges };
 
 module.exports = { AdminPrivileges, UserPrivileges };

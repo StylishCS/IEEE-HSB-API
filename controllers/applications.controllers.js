@@ -75,6 +75,7 @@ async function submitAnswerApplicationController(req, res) {
 
 async function getApplicationWithAnswersController(req, res) {
   try {
+    console.log(req.user);
     const application = await Application.find().populate("answers");
     return res.status(200).json(application);
   } catch (err) {

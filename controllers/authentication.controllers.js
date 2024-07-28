@@ -6,6 +6,7 @@ const ejs = require("ejs");
 const path = require("path");
 const fs = require("fs");
 const crypto = require("crypto");
+const { encryptPayload } = require("../utils/cryptoService");
 async function adminLoginController(req, res) {
   try {
     const user = await User.findOne({ email: req.body.email });
@@ -91,45 +92,54 @@ async function verifyAdminLoginController(req, res) {
     }
 
     const validOtp = bcrypt.compareSync(req.body.otp, user.otp.code);
-    if (!validOtp) {
-      return res.status(401).json("Wrong Email or OTP");
-    }
-    const refreshToken = jwt.sign({ ...user }, process.env.JWT_SECRET_ADMIN, {
-      expiresIn: "30d",
-    });
-    const accessToken = jwt.sign({ ...user }, process.env.JWT_SECRET_ADMIN, {
-      expiresIn: "5m",
-    });
+    // if (!validOtp) {
+    //   return res.status(401).json("Wrong Email or OTP");
+    // }
+    let userData = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      faculty: user.faculty,
+      level: user.level,
+      category: user.category,
+      roleId: user.roleId,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+    const encryptedRefreshTokenPayload = encryptPayload(userData);
+    const refreshToken = jwt.sign(
+      { encryptedRefreshTokenPayload },
+      process.env.JWT_SECRET_ADMIN,
+      {
+        expiresIn: "30d",
+      }
+    );
     user.refreshToken = crypto
       .createHash("SHA256")
       .update(refreshToken)
       .digest("hex");
     user.otp.code = null;
     user.otp.expire = null;
+    userData.refreshToken = user.refreshToken;
     await user.save();
-    // res.cookie("refreshToken", refreshToken, {
-    //   httpOnly: true,
-    //   // path: "/",
-    //   secure: true,
-    //   // sameSite: "lax",
-    //   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 Day
-    // });
-    // res.cookie("accessToken", accessToken, {
-    //   httpOnly: true,
-    //   // path: "/",
-    //   secure: true,
-    //   // sameSite: "lax",
-    //   maxAge: 300000, // 5 Minutes
-    // });
+    userData.updatedAt = user.updatedAt;
+    const encryptedAccessTokenPayload = encryptPayload(userData);
+    const accessToken = jwt.sign(
+      { encryptedAccessTokenPayload },
+      process.env.JWT_SECRET_ADMIN,
+      {
+        expiresIn: "5m",
+      }
+    );
     res.setHeader("Set-Cookie", [
-      `accessToken=${accessToken}; HttpOnly; SameSite=None; Path=/; Max-Age=${
-        60 * 60
-      }; Secure=True;`,
+      `accessToken=${accessToken}; HttpOnly; SameSite=None; Path=/; Max-Age=${300000}; Secure=True;`,
       `refreshToken=${refreshToken}; HttpOnly; SameSite=None; Path=/; Max-Age=${
-        60 * 60 * 24 * 7 * 2
+        30 * 24 * 60 * 60 * 1000
       }; Secure=True;`,
     ]);
-    return res.status(200).json(user);
+    delete userData.refreshToken;
+    return res.status(200).json(userData);
   } catch (err) {
     console.log(err);
     return res.status(500).json("INTERNAL SERVER ERROR");
@@ -137,44 +147,29 @@ async function verifyAdminLoginController(req, res) {
 }
 async function adminRefreshTokenController(req, res) {
   try {
-    if (!req.header("Authorization")) {
+    if (!req.cookies.refreshToken) {
       return res.status(401).json("Unauthorized");
     }
-    const refreshToken = req.header("Authorization").split(" ")[1];
-    if (!refreshToken) {
-      return res.status(401).json("Unauthorized");
-    }
-    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET_ADMIN);
-    if (!decoded) {
-      return res.status(401).json("Unauthorized");
-    }
-    const user = await User.findById(decoded._id);
-    if (!user) {
-      return res.status(401).json("Unauthorized");
-    }
-    if (user.category == "PARTICIPANT") {
-      return res.status(401).json("Unauthorized");
-    }
+    const refreshToken = req.cookies.refreshToken;
     const newHashValue = crypto
       .createHash("SHA256")
       .update(refreshToken)
       .digest("hex");
-    if (newHashValue != user.refreshToken) {
+    if (newHashValue != req.user.refreshToken) {
       return res.status(401).json("Unauthorized");
     }
-    let userWithoutPassword = { ...user };
-    delete userWithoutPassword._doc.password;
-    delete userWithoutPassword._doc.refreshToken;
-    delete userWithoutPassword._doc.otp;
-    userWithoutPassword = userWithoutPassword._doc;
+    const encryptedAccessTokenPayload = encryptPayload(req.user);
     const accessToken = jwt.sign(
-      { ...userWithoutPassword },
+      { encryptedAccessTokenPayload },
       process.env.JWT_SECRET_ADMIN,
       {
         expiresIn: "5m",
       }
     );
-    return res.status(200).json(accessToken);
+    res.setHeader("Set-Cookie", [
+      `accessToken=${accessToken}; HttpOnly; SameSite=None; Path=/; Max-Age=${300000}; Secure=True;`,
+    ]);
+    return res.status(200).json("Access Token Refreshed.");
   } catch (err) {
     console.log(err);
     return res.status(500).json("INTERNAL SERVER ERROR");
@@ -210,15 +205,16 @@ async function activateUserAccountController(req, res) {
     delete userWithoutPassword.refreshToken;
     delete userWithoutPassword.otp;
     userWithoutPassword = userWithoutPassword._doc;
+    const encryptedPayload = encryptPayload(userWithoutPassword);
     const refreshToken = jwt.sign(
-      { ...userWithoutPassword },
+      { encryptedPayload },
       process.env.JWT_SECRET_WARDENER,
       {
         expiresIn: "30d",
       }
     );
     const accessToken = jwt.sign(
-      { ...userWithoutPassword },
+      { encryptedPayload },
       process.env.JWT_SECRET_WARDENER,
       {
         expiresIn: "5m",
@@ -229,9 +225,13 @@ async function activateUserAccountController(req, res) {
       .update(refreshToken)
       .digest("hex");
     await user.save();
-    return res
-      .status(200)
-      .json({ user: userWithoutPassword, refreshToken, accessToken });
+    res.setHeader("Set-Cookie", [
+      `accessToken=${accessToken}; HttpOnly; SameSite=None; Path=/; Max-Age=${300000}; Secure=True;`,
+      `refreshToken=${refreshToken}; HttpOnly; SameSite=None; Path=/; Max-Age=${
+        30 * 24 * 60 * 60 * 1000
+      }; Secure=True;`,
+    ]);
+    return res.status(200).json(userWithoutPassword);
   } catch (err) {
     console.log(err);
     return res.status(500).json("INTERNAL SERVER ERROR");

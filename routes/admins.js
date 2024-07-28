@@ -4,9 +4,10 @@ const {
   verifyAdminLoginController,
   adminRefreshTokenController,
 } = require("../controllers/authentication.controllers");
+const { AdminPrivileges } = require("../middlewares/jwtServices");
 var router = express.Router();
 
 router.post("/login", adminLoginController);
 router.post("/verify", verifyAdminLoginController);
-router.get("/refreshToken", adminRefreshTokenController);
+router.get("/refreshToken", AdminPrivileges, adminRefreshTokenController);
 module.exports = router;

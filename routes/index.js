@@ -23,32 +23,18 @@ router.get(
     res.send("ok");
   }
 );
+/* End OF Seeds */
 
-router.get("/set-cookie", (req, res) => {
-  res.cookie("myCookie", "cookie123", {
-    httpOnly: true,
-    path: "/",
-    secure: true,
-  });
-  res.end();
-});
-
+/* Cookies */
 router.get("/cookie", (req, res) => {
-  res.cookie("token", "testToken123", {
-    // can only be accessed by server requests
-    httpOnly: true,
-    // path = where the cookie is valid
-    path: "/",
-    // domain = what domain the cookie is valid on
-    domain: "localhost",
-    // secure = only send cookie over https
-    secure: false,
-    // sameSite = only send cookie if the request is coming from the same origin
-    sameSite: "lax", // "strict" | "lax" | "none" (secure must be true)
-    // maxAge = how long the cookie is valid for in milliseconds
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 1 hour
-  });
-  //res.setHeader("Set-Cookie", "myCookie=exampleValue; HttpOnly");
+  res.setHeader("Set-Cookie", [
+    `cookieOne=${"test123"}; HttpOnly; SameSite=None; Path=/; Max-Age=${
+      60 * 60
+    }; Secure=True;`,
+    `cookieTwo=${"test456"}; HttpOnly; SameSite=None; Path=/; Max-Age=${
+      60 * 60 * 24 * 7 * 2
+    }; Secure=True;`,
+  ]);
   res.json("ok");
 });
 
@@ -57,5 +43,6 @@ router.get("/check-cookie", (req, res) => {
   const cookies = req.cookies;
   res.json(cookies);
 });
+/* End Of Cookies */
 
 module.exports = router;
