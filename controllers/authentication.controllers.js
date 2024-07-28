@@ -92,9 +92,9 @@ async function verifyAdminLoginController(req, res) {
     }
 
     const validOtp = bcrypt.compareSync(req.body.otp, user.otp.code);
-    // if (!validOtp) {
-    //   return res.status(401).json("Wrong Email or OTP");
-    // }
+    if (!validOtp) {
+      return res.status(401).json("Wrong Email or OTP");
+    }
     let userData = {
       _id: user._id,
       name: user.name,
