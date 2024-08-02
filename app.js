@@ -6,12 +6,22 @@ var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 const mongoose = require("mongoose");
 const cors = require("cors");
+
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
 var adminsRouter = require("./routes/admins");
-var applicationsRouter = require("./routes/applications");
-var committeesRouter = require("./routes/committees");
-var chaptersRouter = require("./routes/chapters");
+var sloganRouter = require("./routes/slogan");
+var ieeeDayRouter = require("./routes/ieeeDay");
+var sloganRouter = require("./routes/slogan");
+var introRouter = require("./routes/intro");
+var familyRouter = require("./routes/family");
+var achievementsRouter = require("./routes/achievements");
+var partnersRouter = require("./routes/partners");
+var testimonialRouter = require("./routes/testimonials");
+var galleryRouter = require("./routes/gallery");
+var eventsRouter = require("./routes/events");
+var contactRouter = require("./routes/contact");
+var membershipRouter = require("./routes/membership");
 
 mongoose
   .connect(process.env.DB_CONNECTION_STRING)
@@ -50,9 +60,17 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
 app.use("/admins", adminsRouter);
-app.use("/applications", applicationsRouter);
-app.use("/committees", committeesRouter);
-app.use("/chapters", chaptersRouter);
+app.use("/slogan", sloganRouter);
+app.use("/ieeeDay", ieeeDayRouter);
+app.use("/intro", introRouter);
+app.use("/family", familyRouter);
+app.use("/achievements", achievementsRouter);
+app.use("/partners", partnersRouter);
+app.use("/testimonials", testimonialRouter);
+app.use("/gallery", galleryRouter);
+app.use("/events", eventsRouter);
+app.use("/contacts", contactRouter);
+app.use("/membership", membershipRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

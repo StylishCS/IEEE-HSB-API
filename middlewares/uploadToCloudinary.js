@@ -5,16 +5,20 @@ async function uploadToCloudinary(req, res, next) {
   try {
     if (req.file) {
       const result = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream((error, result) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(result);
+        const stream = cloudinary.uploader.upload_stream(
+          { resource_type: "auto" },
+          (error, result) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(result);
+            }
           }
-        });
+        );
 
         streamifier.createReadStream(req.file.buffer).pipe(stream);
       });
+
       req.cloudinaryResult = result;
     }
     next();

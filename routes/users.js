@@ -1,9 +1,9 @@
 var express = require("express");
-const {
-  activateUserAccountController,
-} = require("../controllers/authentication.controllers");
+
 var router = express.Router();
 
-router.post("/activate", activateUserAccountController);
+router.get("/", (req, res) => {
+  res.send("hello world");
+});
 
 module.exports = router;

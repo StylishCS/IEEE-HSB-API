@@ -17,9 +17,6 @@ async function adminLoginController(req, res) {
     if (!valid) {
       return res.status(401).json("Wrong Email or Password");
     }
-    if (user.category === "participant") {
-      return res.status(401).json("Wrong Email or Password");
-    }
 
     let otp = Math.floor(1000 + Math.random() * 9000);
     const expiresIn = new Date();
@@ -78,6 +75,71 @@ async function adminLoginController(req, res) {
   }
 }
 
+async function resendOtpController(req, res) {
+  try {
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      return res.status(401).json("Wrong Email or Password");
+    }
+    if (!user.otp.code) {
+      return res.status(400).json("No OTP Exist");
+    }
+    let otp = Math.floor(1000 + Math.random() * 9000);
+    const expiresIn = new Date();
+    expiresIn.setMinutes(expiresIn.getMinutes() + 5);
+    user.otp = {
+      code: bcrypt.hashSync(otp.toString(), 10),
+      expire: expiresIn,
+    };
+    await user.save();
+
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      service: "Gmail",
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.NODEMAILER_USER,
+        pass: process.env.NODEMAILER_PASSWORD,
+      },
+    });
+
+    const data = {
+      name: user.name,
+      email: user.email,
+      otp: otp,
+    };
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "public",
+      "mail-template",
+      "otp-mail.ejs"
+    );
+    const fileContent = fs.readFileSync(filePath, "utf8");
+    const modifiedEmailTemplate = ejs.render(fileContent, data);
+
+    const mailOptions = {
+      from: "ieee.hsb.official@gmail.com",
+      to: user.email,
+      subject: "Your OTP Code",
+      html: modifiedEmailTemplate,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log(error);
+        throw error;
+      }
+      console.log("Email sent: " + info.response);
+    });
+
+    return res.status(200).json("Verification Code Sent..");
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json("INTERNAL SERVER ERROR");
+  }
+}
 async function verifyAdminLoginController(req, res) {
   try {
     const user = await User.findOne({ email: req.body.email }).select(
@@ -176,71 +238,9 @@ async function adminRefreshTokenController(req, res) {
   }
 }
 
-async function activateUserAccountController(req, res) {
-  try {
-    const token = req.header("Authorization");
-    const { password } = req.body;
-    if (!token) {
-      return res.status(401).json("Missing Verification Token");
-    }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_VERIFY);
-    if (!decoded) {
-      return res.status(401).json("Verification Token Malformed");
-    }
-    const user = await User.findById(decoded._id);
-    if (!user) {
-      return res.status(401).json("Verification Token Malformed");
-    }
-    if (user.verified) {
-      return res.status(401).json("Verification Token Malformed");
-    }
-    if (user.password != decoded.password) {
-      return res.status(401).json("Verification Token Malformed");
-    }
-    user.password = bcrypt.hashSync(password, 10);
-    user.verified = true;
-    await user.save();
-    let userWithoutPassword = { ...user };
-    delete userWithoutPassword.password;
-    delete userWithoutPassword.refreshToken;
-    delete userWithoutPassword.otp;
-    userWithoutPassword = userWithoutPassword._doc;
-    const encryptedPayload = encryptPayload(userWithoutPassword);
-    const refreshToken = jwt.sign(
-      { encryptedPayload },
-      process.env.JWT_SECRET_WARDENER,
-      {
-        expiresIn: "30d",
-      }
-    );
-    const accessToken = jwt.sign(
-      { encryptedPayload },
-      process.env.JWT_SECRET_WARDENER,
-      {
-        expiresIn: "5m",
-      }
-    );
-    user.refreshToken = crypto
-      .createHash("SHA256")
-      .update(refreshToken)
-      .digest("hex");
-    await user.save();
-    res.setHeader("Set-Cookie", [
-      `accessToken=${accessToken}; HttpOnly; SameSite=None; Path=/; Max-Age=${300000}; Secure=True;`,
-      `refreshToken=${refreshToken}; HttpOnly; SameSite=None; Path=/; Max-Age=${
-        30 * 24 * 60 * 60 * 1000
-      }; Secure=True;`,
-    ]);
-    return res.status(200).json(userWithoutPassword);
-  } catch (err) {
-    console.log(err);
-    return res.status(500).json("INTERNAL SERVER ERROR");
-  }
-}
-
 module.exports = {
   adminLoginController,
   verifyAdminLoginController,
   adminRefreshTokenController,
-  activateUserAccountController,
+  resendOtpController,
 };
